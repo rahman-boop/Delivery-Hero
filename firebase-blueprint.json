@@ -1,0 +1,48 @@
+{
+  "entities": {
+    "Order": {
+      "title": "Delivery Order",
+      "description": "Information about a delivery order.",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string", "description": "UID of the owner" },
+        "customerName": { "type": "string", "description": "Name of the customer" },
+        "phoneNumber": { "type": "string", "description": "Phone number of the customer" },
+        "address": { "type": "string", "description": "Delivery address" },
+        "latitude": { "type": "number", "description": "Latitude for the location" },
+        "longitude": { "type": "number", "description": "Longitude for the location" },
+        "orderDetails": { "type": "string", "description": "Items in the order" },
+        "deliveryCharge": { "type": "number", "description": "Charge for delivery" },
+        "timestamp": { "type": "integer", "description": "Time the order was created" },
+        "status": { "type": "string", "enum": ["Pending", "Accepted", "On the Way", "Completed", "Cancelled"] },
+        "restaurantId": { "type": "string", "description": "Optional reference to a restaurant" }
+      },
+      "required": ["userId", "customerName", "phoneNumber", "address", "orderDetails", "deliveryCharge", "timestamp", "status"]
+    },
+    "Restaurant": {
+      "title": "Restaurant",
+      "description": "Details about a partner restaurant.",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string", "description": "UID of the owner" },
+        "name": { "type": "string", "description": "Restaurant name" },
+        "phoneNumber": { "type": "string", "description": "Restaurant contact" },
+        "address": { "type": "string", "description": "Restaurant address" },
+        "latitude": { "type": "number", "description": "Latitude for the restaurant" },
+        "longitude": { "type": "number", "description": "Longitude for the restaurant" },
+        "timestamp": { "type": "integer", "description": "Created time" }
+      },
+      "required": ["userId", "name", "phoneNumber", "address", "timestamp"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}/orders/{orderId}": {
+      "schema": "Order",
+      "description": "Collection of orders for a specific user"
+    },
+    "/users/{userId}/restaurants/{restaurantId}": {
+      "schema": "Restaurant",
+      "description": "Collection of restaurants for a specific user"
+    }
+  }
+}

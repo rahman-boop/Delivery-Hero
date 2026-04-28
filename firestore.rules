@@ -1,0 +1,85 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Default deny
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    // Orders Rules
+    match /users/{userId}/orders/{orderId} {
+      allow get: if isOwner(userId);
+      allow list: if isOwner(userId);
+      
+      allow create: if isOwner(userId) 
+        && isValidId(orderId)
+        && isValidOrder(incoming());
+      
+      allow update: if isOwner(userId)
+        && isValidOrder(incoming())
+        && (
+          // Status update action
+          (incoming().diff(existing()).affectedKeys().hasOnly(['status'])) ||
+          // General edit
+          (incoming().diff(existing()).affectedKeys().hasOnly(['customerName', 'phoneNumber', 'address', 'latitude', 'longitude', 'orderDetails', 'deliveryCharge', 'restaurantId']))
+        );
+      
+      allow delete: if isOwner(userId);
+    }
+
+    // Restaurants Rules
+    match /users/{userId}/restaurants/{restaurantId} {
+      allow get: if isOwner(userId);
+      allow list: if isOwner(userId);
+      
+      allow create: if isOwner(userId)
+        && isValidId(restaurantId)
+        && isValidRestaurant(incoming());
+      
+      allow update: if isOwner(userId)
+        && isValidRestaurant(incoming())
+        && incoming().diff(existing()).affectedKeys().hasOnly(['name', 'phoneNumber', 'address', 'latitude', 'longitude']);
+        
+      allow delete: if isOwner(userId);
+    }
+
+    function isValidOrder(data) {
+      return data.userId == request.auth.uid
+        && data.customerName is string && data.customerName.size() <= 200
+        && data.phoneNumber is string && data.phoneNumber.size() <= 20
+        && data.address is string && data.address.size() <= 500
+        && data.orderDetails is string && data.orderDetails.size() <= 1000
+        && data.deliveryCharge is number
+        && data.status in ["Pending", "Accepted", "On the Way", "Completed", "Cancelled"]
+        && data.timestamp is int;
+    }
+
+    function isValidRestaurant(data) {
+      return data.userId == request.auth.uid
+        && data.name is string && data.name.size() <= 200
+        && data.phoneNumber is string && data.phoneNumber.size() <= 20
+        && data.address is string && data.address.size() <= 500
+        && data.timestamp is int;
+    }
+  }
+}

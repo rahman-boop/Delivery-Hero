@@ -1,0 +1,6 @@
+{
+  "name": "Delivery Hero",
+  "description": "Smart delivery management with AI assistant, real-time tracking, and cloud reports.",
+  "requestFramePermissions": ["geolocation"],
+  "majorCapabilities": []
+}
